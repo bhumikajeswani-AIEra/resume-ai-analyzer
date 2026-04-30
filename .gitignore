@@ -1,0 +1,28 @@
+# API keys - never commit these
+.env
+backend/.env
+frontend/.env.local
+
+# Personal files
+*.pdf
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# OS
+.DS_Store
+*.swp
