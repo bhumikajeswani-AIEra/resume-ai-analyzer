@@ -38,4 +38,5 @@ async def analyze(
         ats=ATSResult(**ats_result),
         missing_keywords=claude_result["missing_keywords"],
         template=template_info,
+        resume_text=resume_text,
     )

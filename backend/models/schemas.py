@@ -56,3 +56,4 @@ class AnalysisResponse(BaseModel):
     ats: ATSResult
     missing_keywords: list[str]
     template: TemplateInfo
+    resume_text: str

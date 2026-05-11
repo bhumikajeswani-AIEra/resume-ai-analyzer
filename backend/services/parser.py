@@ -32,9 +32,46 @@ def _parse_pdf(content: bytes) -> str:
 def _parse_docx(content: bytes) -> str:
     try:
         from docx import Document
+        from docx.oxml.ns import qn
 
         doc = Document(io.BytesIO(content))
-        paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-        return "\n".join(paragraphs)
+        parts: list[str] = []
+
+        def para_text(p_elem) -> str:
+            return "".join(n.text for n in p_elem.iter(qn("w:t")) if n.text).strip()
+
+        def table_lines(tbl_elem) -> list[str]:
+            lines = []
+            for tr in tbl_elem.findall(".//" + qn("w:tr")):
+                cells = []
+                for tc in tr.findall(".//" + qn("w:tc")):
+                    cell_text = "\n".join(
+                        para_text(p) for p in tc.findall(".//" + qn("w:p"))
+                        if para_text(p)
+                    )
+                    if cell_text:
+                        cells.append(cell_text)
+                if cells:
+                    lines.append("  ".join(cells))
+            return lines
+
+        # Walk body in document order — interleaves paragraphs and tables correctly
+        for child in doc.element.body:
+            local = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+            if local == "p":
+                t = para_text(child)
+                if t:
+                    parts.append(t)
+            elif local == "tbl":
+                parts.extend(table_lines(child))
+
+        # Text boxes (shapes drawn over the page — often used for name/header areas)
+        for txbx in doc.element.iter(qn("w:txbxContent")):
+            for p in txbx.iter(qn("w:p")):
+                t = para_text(p)
+                if t:
+                    parts.append(t)
+
+        return "\n".join(parts)
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Failed to parse DOCX: {str(e)}")

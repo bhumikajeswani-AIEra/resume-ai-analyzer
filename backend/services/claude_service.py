@@ -40,7 +40,7 @@ Return a JSON object with EXACTLY this structure:
 Guidelines:
 - overall_score: honest 0-100 quality score
 - strengths: 3-5 things working well (reference actual resume content)
-- corrections: specific fixes needed — grammar, weak bullets, vague language, missing metrics (reference actual text)
+- corrections: ONLY include issues that directly hurt shortlist probability — factual errors, ATS-blocking problems, weak/vague bullets missing metrics, critical missing sections. DO NOT flag cosmetic or formatting preferences (e.g. punctuation style, unconventional phrasing, parenthetical structure, how dates are displayed) unless they would cause an ATS to reject or a recruiter to disqualify. Max 5 corrections, highest impact only.
 - field_suggestions: 5-7 tailored tips to stand out for {target_field} roles
 - missing_keywords: important skills/tools ATS systems look for in {target_field} that are absent
 - template_recommendation: best template style for this candidate and field
@@ -54,7 +54,8 @@ Be specific and actionable. Reference actual content from the resume.
 
     try:
         response = model.generate_content(prompt)
-        return json.loads(response.text)
+        obj, _ = json.JSONDecoder().raw_decode(response.text.strip())
+        return obj
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse AI response: {str(e)}")
     except Exception as e:

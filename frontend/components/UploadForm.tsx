@@ -25,7 +25,16 @@ export default function UploadForm() {
   const [error, setError] = useState("");
 
   const onDrop = useCallback((accepted: File[]) => {
-    if (accepted[0]) setFile(accepted[0]);
+    const f = accepted[0];
+    if (!f) return;
+    setFile(f);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const b64 = (e.target?.result as string).split(",")[1] ?? "";
+      sessionStorage.setItem("resumeFileBase64", b64);
+      sessionStorage.setItem("resumeFileType", f.name.toLowerCase().endsWith(".docx") ? "docx" : "pdf");
+    };
+    reader.readAsDataURL(f);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -41,6 +50,7 @@ export default function UploadForm() {
     if (!file) return setError("Please upload a resume file.");
     const targetField = field === "Other" ? customField : field;
     if (!targetField.trim()) return setError("Please specify a target field.");
+    if (!years) return setError("Please enter your years of experience.");
 
     setLoading(true);
     setError("");
@@ -111,7 +121,7 @@ export default function UploadForm() {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Years of Experience (optional)</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Years of Experience *</label>
           <input
             type="number"
             min={0}
